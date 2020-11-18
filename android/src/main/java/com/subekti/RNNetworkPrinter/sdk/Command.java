@@ -127,6 +127,8 @@ public class Command {
 	//标准弹钱箱指令
 	public static byte[] ESC_p = new byte[] {ESC, 'F', 0x00, 0x00, 0x00 };
 	
+	public static byte[] ESC_p2 = new byte[] {ESC, 'p', 0x00, 0x00, 0x00 };
+	
 	/**
 	 * 条码设置指令
 	 */
