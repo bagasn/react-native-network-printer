@@ -89,7 +89,8 @@ public class PrinterCommand {
 
         if ((nMode < 0 || nMode > 1) | nTime1 < 0 | nTime1 > 255 | nTime2 < 0 | nTime2 > 255) return null;
 
-        byte[] data = Arrays.copyOf(Command.ESC_p, Command.ESC_p.length);
+//         byte[] data = Arrays.copyOf(Command.ESC_p, Command.ESC_p.length);
+        byte[] data = Arrays.copyOf(Command.ESC_p2, Command.ESC_p2.length);
         data[2] = (byte) nMode;
         data[3] = (byte) nTime1;
         data[4] = (byte) nTime2;
