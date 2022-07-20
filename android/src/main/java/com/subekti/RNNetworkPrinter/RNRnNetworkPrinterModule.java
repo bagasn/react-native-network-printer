@@ -17,7 +17,15 @@ import com.subekti.RNNetworkPrinter.sdk.PrintPicture;
 import com.subekti.RNNetworkPrinter.sdk.PrinterCommand;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
+
+import java.util.HashMap;
 import java.util.concurrent.*;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.EncodeHintType;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
+
 
 public class RNRnNetworkPrinterModule extends ReactContextBaseJavaModule {
   public static final int WIDTH_58 = 384;
@@ -40,6 +48,7 @@ public class RNRnNetworkPrinterModule extends ReactContextBaseJavaModule {
   @ReactMethod
   public void Print(String ip, ReadableArray commands, Callback cb) {
     final String ipPrinter = ip;
+    
     final Callback callback = cb;
     final ReadableArray pCommands = commands;
 
@@ -93,6 +102,42 @@ public class RNRnNetworkPrinterModule extends ReactContextBaseJavaModule {
                 out.write(PrinterCommand.POS_Set_PrtAndFeedPaper(30));
                 out.write(Command.ESC_Init);
               }
+            } else if (command.getString("printQR")) {
+            	HashMap<EncodeHintType, Object> hints = new HashMap<EncodeHintType, Object>();
+                hints.put(EncodeHintType.CHARACTER_SET, "utf-8");
+                hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.forBits(correctionLevel));
+                BitMatrix bitMatrix = new QRCodeWriter().encode(content,
+                        BarcodeFormat.QR_CODE, size, size, hints);
+            	
+                int width = bitMatrix.getWidth();
+                int height = bitMatrix.getHeight();
+                
+                int[] pixels = new int[width * height];
+                for (int y = 0; y < height; y++) {
+                    for (int x = 0; x < width; x++) {
+                        if (bitMatrix.get(x, y)) {
+                            pixels[y * width + x] = 0xff000000;
+                        } else {
+                            pixels[y * width + x] = 0xffffffff;
+                        }
+                    }
+                }
+                
+                Bitmap bitmap = Bitmap.createBitmap(width, height,
+                        Bitmap.Config.ARGB_8888);
+
+                bitmap.setPixels(pixels, 0, width, 0, 0, width, height);
+                
+                if (bitmap != null) {
+                    byte[] data = PrintPicture.POS_PrintBMP(bitmap, size, 0, 0);
+                	out.write(Command.ESC_Init);
+                    out.write(Command.LF);
+                    out.write(PrinterCommand.POS_S_Align(1));
+                    out.write(data);
+                    out.write(PrinterCommand.POS_Set_PrtAndFeedPaper(30));
+                    out.write(Command.ESC_Init);
+                }
+                
             } else if (command.hasKey("cutPaper")) {
               // CUT
               int cutPaper = command.getInt("cutPaper");
