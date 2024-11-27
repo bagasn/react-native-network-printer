@@ -108,6 +108,24 @@ public class RNRnNetworkPrinterModule extends ReactContextBaseJavaModule {
             } else if (command.hasKey("feed")) {
               int feed = command.getInt("feed");
               out.write(PrinterCommand.POS_Set_PrtAndFeedPaper(feed));
+            } else if (command.hasKey("barcode")) {
+              String str = command.getString("barcode");
+              int nType = 73; // CODE128
+              int nWidth = 100;
+              int nHeight = 2;
+              int nHriFontType = 0; 
+              int nHriFontPosition = 0;
+
+              if (command.hasKey("barcodeWidth")) {
+                nWidth = command.getInt("barcodeWidth");
+              }
+              if (command.hasKey("barcodeHeight")) {
+                nHeight = command.getInt("barcodeHeight");
+              }
+
+              byte[] bytes = PrinterCommand.getBarCodeCommand(
+                str, nType, nWidth, nHeight, nHriFontType, nHriFontPosition
+              );
             }
           }
           sock.close();
