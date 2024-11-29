@@ -126,6 +126,8 @@ public class RNRnNetworkPrinterModule extends ReactContextBaseJavaModule {
               byte[] bytes = PrinterCommand.getBarCodeCommand(
                 str, nType, nWidth, nHeight, nHriFontType, nHriFontPosition
               );
+
+              out.write(PrinterCommand.POS_S_Align(1));
               out.write(bytes);
             }
           }
