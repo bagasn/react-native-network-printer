@@ -65,6 +65,20 @@ public class RNRnNetworkPrinterModule extends ReactContextBaseJavaModule {
               out.write(bytes);
               out.write(PrinterCommand.POS_Set_PrtAndFeedPaper(30));
               out.write(Command.ESC_Init);
+            } else if (command.hasKey("printTextBig")) {
+              // Print TEXT
+              String encoding = "GBK";
+              int codepage = 0;
+              int widthTimes = 1;
+              int heigthTimes = 1;
+              int fonttype = 0;
+              String toPrint = command.getString("printTextBig");
+
+              byte[] bytes = PrinterCommand.POS_Print_Text(toPrint, encoding, codepage, widthTimes, heigthTimes, fonttype);
+              out.write(PrinterCommand.POS_S_Align(1));
+              out.write(bytes);
+              out.write(PrinterCommand.POS_Set_PrtAndFeedPaper(30));
+              out.write(Command.ESC_Init);
             } else if (command.hasKey("printPic")) {
               // Print PIC
               int width = 0;
