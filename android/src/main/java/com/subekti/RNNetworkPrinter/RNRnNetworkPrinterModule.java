@@ -75,7 +75,7 @@ public class RNRnNetworkPrinterModule extends ReactContextBaseJavaModule {
               String toPrint = command.getString("printTextBig");
 
               byte[] bytes = PrinterCommand.POS_Print_Text(toPrint, encoding, codepage, widthTimes, heigthTimes, fonttype);
-              out.write(PrinterCommand.POS_S_Align(1));
+              out.write(PrinterCommand.POS_S_Align(0));
               out.write(bytes);
               out.write(PrinterCommand.POS_Set_PrtAndFeedPaper(30));
               out.write(Command.ESC_Init);
