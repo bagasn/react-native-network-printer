@@ -10,6 +10,15 @@ const Print = async (ip, commands) => {
   });
 };
 
+const PrintLabel = async (ip, commands) => {
+  return new Promise((resolve, reject) => {
+    RNRnNetworkPrinter.PrintLabel(ip, commands, (err, result) => {
+      if (err) reject(err);
+      resolve(result);
+    });
+  });
+};
+
 const GetPrinters = async () => {
   const data = await Promise.all([getPrinter(0), getPrinter(1), getPrinter(2)]);
   return data[0].concat(data[1]).concat(data[2]);
@@ -25,4 +34,4 @@ const getPrinter = async type => {
 };
 
 const NetworkPrinter = Print;
-export {Print, NetworkPrinter, GetPrinters};
+export {Print, PrintLabel, NetworkPrinter, GetPrinters};
