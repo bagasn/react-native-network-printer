@@ -15,6 +15,7 @@ import com.facebook.react.bridge.*;
 import com.subekti.RNNetworkPrinter.sdk.Command;
 import com.subekti.RNNetworkPrinter.sdk.PrintPicture;
 import com.subekti.RNNetworkPrinter.sdk.PrinterCommand;
+import com.subekti.RNNetworkPrinter.sdk.TscCommand;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import java.util.concurrent.*;
@@ -36,6 +37,81 @@ public class RNRnNetworkPrinterModule extends ReactContextBaseJavaModule {
     return "RNRnNetworkPrinter";
   }
 
+  @ReactMethod
+  public void PrintLabel(String ip, ReadableMap commands, Callback cb) {
+      final String ipPrinter = ip;
+      final Callback callback = cb;
+      final ReadableMap pCommands = commands;
+
+      Runnable runnable = new Runnable() {
+          @Override
+          public void run() {
+              Socket sock = null;
+              try {
+                  sock = new Socket(ipPrinter, 9100);
+                  DataOutputStream out = new DataOutputStream(sock.getOutputStream());
+
+                  ReadableMap config = (pCommands != null && pCommands.hasKey("config") && !pCommands.isNull("config"))
+                          ? pCommands.getMap("config")
+                          : null;
+
+                  int paperSize = (config != null && config.hasKey("paperSize") && !config.isNull("paperSize"))
+                          ? config.getInt("paperSize") : 58;
+                  int paperHeight = (config != null && config.hasKey("paperHeight") && !config.isNull("paperHeight"))
+                          ? config.getInt("paperHeight") : 30;
+                  int offsetX = (config != null && config.hasKey("xOffset") && !config.isNull("xOffset"))
+                          ? config.getInt("xOffset") : 20;
+                  int offsetY = (config != null && config.hasKey("yOffset") && !config.isNull("yOffset"))
+                          ? config.getInt("yOffset") : 30;
+                  String fontSize = (config != null && config.hasKey("fontSize") && !config.isNull("fontSize"))
+                          ? config.getString("fontSize") : "TSS24.BF2";
+
+                  out.write(TscCommand.sizeBymm(paperSize, paperHeight));
+                  out.write(TscCommand.cls());
+
+                  ReadableArray lines = (pCommands != null && pCommands.hasKey("lines") && !pCommands.isNull("lines"))
+                          ? pCommands.getArray("lines")
+                          : null;
+
+                  if (lines != null) {
+                      int lineColumnY = 0;
+
+                      for (int i = 0; i < lines.size(); i++) {
+                          String lineText = lines.isNull(i) ? "" : lines.getString(i);
+                          out.write(TscCommand.text(
+                                  Math.round(offsetX),
+                                  offsetY + lineColumnY,
+                                  fontSize,
+                                  0,
+                                  1,
+                                  1,
+                                  "" + lineText
+                          ));
+
+                          int addY = 25;
+                          if ("1".equals(fontSize)) {
+                              addY = 15;
+                          }
+                          lineColumnY += addY;
+                      }
+                  }
+
+                  out.write(TscCommand.print(1));
+                  out.flush();
+                  sock.close();
+                  callback.invoke(null, "Success");
+              }  catch (Exception e) {
+                  if (sock != null && !sock.isClosed()) {
+                      try {
+                          sock.close();
+                      } catch (IOException ignored) {}
+                  }
+                  callback.invoke(e.toString(), null);
+              }
+          }
+      };
+      executorService.execute(runnable);
+  }
 
   @ReactMethod
   public void Print(String ip, ReadableArray commands, Callback cb) {
