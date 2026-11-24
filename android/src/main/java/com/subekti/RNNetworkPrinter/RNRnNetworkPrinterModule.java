@@ -11,6 +11,8 @@ import javax.annotation.Nullable;
 import android.util.Base64;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.Log;
+
 import com.facebook.react.bridge.*;
 import com.subekti.RNNetworkPrinter.sdk.Command;
 import com.subekti.RNNetworkPrinter.sdk.PrintPicture;
@@ -60,43 +62,52 @@ public class RNRnNetworkPrinterModule extends ReactContextBaseJavaModule {
                   int paperHeight = (config != null && config.hasKey("paperHeight") && !config.isNull("paperHeight"))
                           ? config.getInt("paperHeight") : 30;
                   int offsetX = (config != null && config.hasKey("xOffset") && !config.isNull("xOffset"))
-                          ? config.getInt("xOffset") : 20;
+                          ? config.getInt("xOffset") : 50;
                   int offsetY = (config != null && config.hasKey("yOffset") && !config.isNull("yOffset"))
                           ? config.getInt("yOffset") : 30;
                   String fontSize = (config != null && config.hasKey("fontSize") && !config.isNull("fontSize"))
                           ? config.getString("fontSize") : "TSS24.BF2";
 
-                  out.write(TscCommand.sizeBymm(paperSize, paperHeight));
-                  out.write(TscCommand.cls());
-
-                  ReadableArray lines = (pCommands != null && pCommands.hasKey("lines") && !pCommands.isNull("lines"))
-                          ? pCommands.getArray("lines")
+                  ReadableArray data = (pCommands != null && pCommands.hasKey("data") && !pCommands.isNull("data"))
+                          ? pCommands.getArray("data")
                           : null;
 
-                  if (lines != null) {
-                      int lineColumnY = 0;
+                  if (data != null) {
+                      for (int i = 0; i < data.size(); i++) {
+                          ReadableMap item = data.getMap(i);
+                          ReadableArray lines = (item != null && item.hasKey("lines") && !item.isNull("lines"))
+                                  ? item.getArray("lines")
+                                  : null;
 
-                      for (int i = 0; i < lines.size(); i++) {
-                          String lineText = lines.isNull(i) ? "" : lines.getString(i);
-                          out.write(TscCommand.text(
-                                  Math.round(offsetX),
-                                  offsetY + lineColumnY,
-                                  fontSize,
-                                  0,
-                                  1,
-                                  1,
-                                  "" + lineText
-                          ));
+                          if (lines != null) {
+                              out.write(TscCommand.sizeBymm(paperSize, paperHeight));
+                              out.write(TscCommand.cls());
 
-                          int addY = 25;
-                          if ("1".equals(fontSize)) {
-                              addY = 15;
+                              int lineColumnY = 0;
+                              for (int j = 0; j < lines.size(); j++) {
+                                  String lineText = lines.isNull(j) ? "" : lines.getString(j);
+
+                                  out.write(TscCommand.text(
+                                          Math.round(((float) offsetX / 2)),
+                                          offsetY + lineColumnY,
+                                          fontSize,
+                                          0,
+                                          1,
+                                          1,
+                                          "" + lineText
+                                  ));
+
+                                  int addY = 25;
+                                  if ("1".equals(fontSize)) {
+                                      addY = 15;
+                                  }
+                                  lineColumnY += addY;
+                              }
+
+                              out.write(TscCommand.print(1));
                           }
-                          lineColumnY += addY;
                       }
                   }
-
-                  out.write(TscCommand.print(1));
                   out.flush();
                   sock.close();
                   callback.invoke(null, "Success");

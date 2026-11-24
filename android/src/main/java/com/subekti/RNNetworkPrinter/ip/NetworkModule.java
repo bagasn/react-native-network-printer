@@ -140,7 +140,7 @@ public class NetworkModule extends ReactContextBaseJavaModule {
         callback.invoke(ipAddress);
     }
 
-    @ReactMethod
+    
     public Future<String> getIPV4Address() {
         return executor.submit(new Callable<String>() {
             public String call() {
