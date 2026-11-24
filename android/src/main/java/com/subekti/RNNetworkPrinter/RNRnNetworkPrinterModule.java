@@ -20,6 +20,8 @@ import com.subekti.RNNetworkPrinter.sdk.PrinterCommand;
 import com.subekti.RNNetworkPrinter.sdk.TscCommand;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
+
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.*;
 
 public class RNRnNetworkPrinterModule extends ReactContextBaseJavaModule {
@@ -72,6 +74,7 @@ public class RNRnNetworkPrinterModule extends ReactContextBaseJavaModule {
                           ? pCommands.getArray("data")
                           : null;
 
+                  StringBuilder builder = new StringBuilder();
                   if (data != null) {
                       for (int i = 0; i < data.size(); i++) {
                           ReadableMap item = data.getMap(i);
@@ -86,6 +89,7 @@ public class RNRnNetworkPrinterModule extends ReactContextBaseJavaModule {
                               int lineColumnY = 0;
                               for (int j = 0; j < lines.size(); j++) {
                                   String lineText = lines.isNull(j) ? "" : lines.getString(j);
+                                  builder.append(lineText).append("\n");
 
                                   out.write(TscCommand.text(
                                           Math.round(((float) offsetX / 2)),
@@ -104,14 +108,17 @@ public class RNRnNetworkPrinterModule extends ReactContextBaseJavaModule {
                                   lineColumnY += addY;
                               }
 
-                              out.write(TscCommand.print(1));
+                              out.write(TscCommand.print(1, 1));
                           }
                       }
                   }
+                  Log.d("FUCKYOU", builder.toString());
+
                   out.flush();
                   sock.close();
                   callback.invoke(null, "Success");
               }  catch (Exception e) {
+                  Log.e("NETWORK-LABEL", "ERROR", e);
                   if (sock != null && !sock.isClosed()) {
                       try {
                           sock.close();
